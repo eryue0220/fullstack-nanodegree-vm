@@ -41,14 +41,12 @@ POST = '''\
     <div class=post><em class=date>%s</em><br>%s</div>
 '''
 
-
 @app.route('/', methods=['GET'])
 def main():
   '''Main page of the forum.'''
   posts = "".join(POST % (date, text) for text, date in get_posts())
   html = HTML_WRAP % posts
   return html
-
 
 @app.route('/', methods=['POST'])
 def post():
