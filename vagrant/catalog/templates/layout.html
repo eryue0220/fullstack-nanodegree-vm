@@ -3,17 +3,18 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>{{ title }}</title>
+        {% block title %}
+        {% endblock %}
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
         <link rel="apple-touch-icon" href="apple-touch-icon.png">
-        <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='bootstrap-3.3.7.css') }}">
-        <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}"
+        {% block styles %}
+        {% endblock %}
     </head>
     <body>
-     	{% block content %}
-        {% endblock %}  
+        {% block content %}
+        {% endblock %}
     </body>
 </html>

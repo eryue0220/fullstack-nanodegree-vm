@@ -13,20 +13,19 @@ class User(Base):
 
 	id = Column(Integer, primary_key=True)
 	name = Column(String(250), nullable=False)
+	passwd = Column(String(250), nullable=False)
 	email = Column(String(80), nullable=False)
-
 
 
 class Catalog(Base):
 	__tablename__ = 'catalog'
 
-	id = Column(Integer, primary_key=True)
-	name = Column(String(80), nullable=False)
+	id = Column(Integer, autoincrement=True)
+	name = Column(String(80), primary_key=True, nullable=False)
 
 	@property
 	def serialize(self):
 		return {
-			'id': self.id,
 			'name': self.name
 		}
 
@@ -34,16 +33,15 @@ class Catalog(Base):
 class Item(Base):
 	__tablename__ = 'item'
 
-	id = Column(Integer, primary_key=True)
-	name = Column(String(80), nullable=False)
+	id = Column(Integer, autoincrement=True)
+	name = Column(String(80), primary_key=True, nullable=False)
 	description = Column(String(250))
-	catalog_id = Column(Integer, ForeignKey('catalog.id'))
+	catalog_name = Column(String, ForeignKey('catalog.name'))
 	catalog = relationship(Catalog)
 
 	@property
 	def serialize(self):
 		return {
-			'id': self.id,
 			'name': self.name,
 			'description': self.description
 		}
