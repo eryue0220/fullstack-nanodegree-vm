@@ -9,8 +9,6 @@
 {% endblock %}
 
 {% block content %}
-{% include "header.html" %}
-
 <main role="main" id="side-cotent">
 	<div class="container">
 		<div class="detail-content">
@@ -24,14 +22,14 @@
 					{{ description }}
 				</p>
 			</div>
-			{% if islogin %}
+			{% if is_login %}
 				<div class="detail-itemt__operatin">
 					<ul>
 						<li>
 							<a href="{{url_for('editCatalogItem', catalog=catalog, item=item)}}">Edit</a>
 						</li>
 						<li>
-							<a>Delete</a>
+							<a data-item="{{item}}" class="delete_btn">Delete</a>
 						</li>
 					</ul>
 				</div>
@@ -40,4 +38,6 @@
 	</div>
 </main>
 
+<script src="{{url_for('static', filename='scripts/jquery.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/detail.js')}}"></script>
 {% endblock %}

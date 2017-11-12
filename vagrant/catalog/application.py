@@ -63,13 +63,65 @@ def catalogItem(catalog, item):
         catalog=catalog,
         item=item,
         description=result.description,
-        isLogin=False
+        is_login=True
     )
 
 
 @app.route('/catalog/<catalog>/<item>/edit', methods=['GET', 'POST'])
 def editCatalogItem(catalog, item):
-    return 'EDIT: catalog: ' + catalog + ' item: ' + item
+    if request.method == 'GET':
+        selected_item = session.query(Item).filter_by(name=item).one_or_none()
+        all_catalogs = session.query(Catalog).all()
+        return render_template(
+            'edit.html',
+            catalog=catalog,
+            all_catalogs=all_catalogs,
+            item=selected_item
+        )
+    # Update Item
+    if request.method == 'POST':
+        pass
+
+# delete operation api
+@app.route('/api/v1/catalog/<item>/delete')
+def deleteItem(item):
+    selected_item = session.query(Item).filter_by(name=item).one_or_none()
+    session.delete(selected_item)
+    session.commit()
+    response = {'status': 0, 'msg': 'Delete Success'}
+    return jsonify(response), 200
+
+
+# JSON APIs
+@app.route('/api/v1/catalogs.json')
+def catalogs_api():
+    result = session.query(Catalog).all()
+    return jsonify([i.serialize for i in result])
+
+
+@app.route('/api/v1/catalog/<catalog>.json')
+def catalog_api(catalog):
+    format_catalog = str(catalog).capitalize()
+    query = session.query(Item).filter_by(catalog_name=format_catalog).all()
+    result = []
+    for i in query:
+        result.append({
+            'name': i.name,
+            'description': i.description,
+            'catalog': i.catalog.name
+        })
+    return jsonify(result)
+
+
+@app.route('/api/v1/catalog/<item>.json')
+def catalog_item_api(item):
+    result = session.query(Item).filter_by(name=item).one_or_none()
+    CatalogItem = {
+        'name': result.name,
+        'description': result.description,
+        'catalog': result.catalog.name
+    }
+    return jsonify(CatalogItem=CatalogItem)
 
 
 if __name__ == '__main__':
