@@ -1,0 +1,47 @@
+@charset "utf-8";
+
+@import url(common.css);
+
+a, a:hover {
+	text-decoration: none;
+}
+
+/* header style */
+.catalog_header__container {
+	position: relative;
+}
+
+.catalog-header__title {
+	display: inline-block;
+}
+
+.catalog-header__title h3 {
+	height: 60px;
+	line-height: 60px;
+	margin: 0 0 0 30px;
+	color: #4285f4;
+}
+
+.catalog-header__title h3 a,
+.catalog-header__title h3 a:hover {
+	color: #4285f4;
+}
+
+.nav_bar {
+	position: absolute;
+	top: 0;
+	right: 30px;
+}
+
+.nav_bar .user-nav__list {
+	display: inline-block;
+	height: 60px;
+	line-height: 60px;
+	margin: 0 20px;
+}
+
+.user-nav__list .user-area .user-btn {
+	color: #484848;
+	font-size: 14px;
+	text-decoration: none;
+}
