@@ -40,13 +40,14 @@ function bindModalEvent() {
 function appendModal(item) {
 	$main.append(
 		'<div class="modal-container">' +
+		'<div class="modal-mask"></div>' +
 		'<div class="content">' +
 		'<div class="modal-title">' +
 		'<h4>Are you sure to delete <b>' + item + '</b>? </h4>' +
 		'</div>' +
 		'<div class="modal-option">' +
-		'<button data-item="' + item + '" class="sure">Yes</button>' +
-		'<button class="cancel">Cancel</button>' +
+		'<button data-item="' + item + '" class="btn btn-danger sure" role="button">Yes</button>' +
+		'<button class="btn btn-default cancel" role="button">Cancel</button>' +
 		'</div>' +
 		'</div>' +
 		'</div>'

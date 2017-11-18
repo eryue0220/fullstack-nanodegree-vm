@@ -18,11 +18,11 @@
 						{% for catalog in result %}
 							{% if loop.index == 1 %}
 							<li class="tab-header__list-item active" data-index={{loop.index}}>
-								{{ catalog }}
+								{{ catalog|capitalize }}
 							</li>
 							{% else %}
 							<li class="tab-header__list-item" data-index={{loop.index}}>
-								{{ catalog }}
+								{{ catalog|capitalize }}
 							</li>
 							{% endif %}
 						{% endfor %}
@@ -34,7 +34,7 @@
 						<div class="tab-content__item active" data-index={{loop.index}}>
 							{% for item in result[catalog] %}
 							<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
-								<span>{{ item }}</span>
+								<span>{{ item|capitalize }}</span>
 							</a>
 							{% endfor %}
 						</div>
@@ -42,7 +42,7 @@
 						<div class="tab-content__item" data-index={{loop.index}}>
 							{% for item in result[catalog] %}
 							<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
-								<span>{{ item }}</span>
+								<span>{{ item|capitalize }}</span>
 							</a>
 							{% endfor %}
 						</div>

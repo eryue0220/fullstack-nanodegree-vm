@@ -36,7 +36,7 @@ class Item(Base):
 	id = Column(Integer, autoincrement=True)
 	name = Column(String(80), primary_key=True, nullable=False)
 	description = Column(String(250))
-	catalog_name = Column(String, ForeignKey('catalog.name'))
+	catalog_name = Column(String, ForeignKey('catalog.name', ondelete='cascade', onupdate='cascade'))
 	catalog = relationship(Catalog)
 
 	@property

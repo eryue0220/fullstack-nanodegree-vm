@@ -12,18 +12,29 @@
 <main role="main" id="side-cotent">
 	<div class="container">
 		<div class="edit-container">
-			<form class="update-form" id="upgrade-form">
+			<div class="error-area">
+			</div>
+			<form class="update-form" id="upgrade-form" method="POST">
 				<div>
 					<label for="name">Item Name:</label>
-					<input required type ="text" maxlength="100" value="{{ item.name }}" name="name" class="form-control" />
+					<input required type ="text" maxlength="100" value="{{ item.name }}" name="name" class="form-control" id="item-name" />
 				</div>
 				<div>
 					<label for="catalog">Catalog Name:</label>
-					<input type ="text" value="{{ item.catalog.name }}" name="catalog" class="form-control" />
+					<!-- <input type ="text" value="{{ item.catalog.name }}" name="catalog" class="form-control" id="catalog-name" /> -->
+					<select id="catalog-name" name="catalog" class="dropdown" form="upgrade-form">
+						{% for catalog in all_catalogs %}
+							{% if item.catalog.name == catalog.name %}
+							<option selected="selected" value="{{ catalog.name }}">{{ catalog.name|capitalize }}</option>
+							{% else %}
+							<option value="{{ catalog.name }}">{{ catalog.name|capitalize }}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
 				</div>
 				<div>
-					<label for="description">Catalog Name:</label>
-					<textarea  style="resize:none" maxlength="250" rows="3" name="description" class="form-control"/>{{item.description}}</textarea>
+					<label for="description">Catalog Description:</label>
+					<textarea  style="resize:none" maxlength="250" rows="3" name="description" class="form-control" id="catalog-desc"/>{{item.description}}</textarea>
 				</div>
 				<div>
 					<button type="submit" class="btn btn-default" id="submit">Update</button>

@@ -20,7 +20,6 @@ engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
 session = sessionmaker(bind=engine)()
 
-
 @app.route('/')
 def index():
     catalogs = session.query(Catalog).all()
@@ -69,8 +68,10 @@ def catalogItem(catalog, item):
 
 @app.route('/catalog/<catalog>/<item>/edit', methods=['GET', 'POST'])
 def editCatalogItem(catalog, item):
+    selected_item = session.query(Item).filter_by(name=item).one_or_none()
+    hasChange = False
+
     if request.method == 'GET':
-        selected_item = session.query(Item).filter_by(name=item).one_or_none()
         all_catalogs = session.query(Catalog).all()
         return render_template(
             'edit.html',
@@ -78,9 +79,32 @@ def editCatalogItem(catalog, item):
             all_catalogs=all_catalogs,
             item=selected_item
         )
+
     # Update Item
     if request.method == 'POST':
-        pass
+        form = request.form
+        if form['name'] and form['name'] != selected_item.name:
+            selected_item.name = form['name']
+            hasChange = True
+
+        if form['description'] and form['description'] != selected_item.description:
+            selected_item.description = form['description']
+            hasChange = True
+
+        if form['catalog'] and form['catalog'] != selected_item.catalog.name:
+            selected_item.catalog_name = form['catalog']
+            hasChange = True
+
+        if hasChange:
+            session.add(selected_item)
+            session.commit()
+
+        return redirect(url_for(
+            'catalogItem',
+            catalog=selected_item.catalog_name,
+            item=selected_item.name
+        ))
+
 
 # delete operation api
 @app.route('/api/v1/catalog/<item>/delete')
@@ -101,8 +125,7 @@ def catalogs_api():
 
 @app.route('/api/v1/catalog/<catalog>.json')
 def catalog_api(catalog):
-    format_catalog = str(catalog).capitalize()
-    query = session.query(Item).filter_by(catalog_name=format_catalog).all()
+    query = session.query(Item).filter_by(catalog_name=catalog).all()
     result = []
     for i in query:
         result.append({

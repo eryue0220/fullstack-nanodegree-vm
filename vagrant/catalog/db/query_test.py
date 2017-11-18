@@ -10,8 +10,16 @@ Base.metadata.engine = engine
 session = sessionmaker(bind=engine)()
 
 catalog_resuslt = session.query(Catalog).all()
-for catalog in catalog_resuslt:
-	print(catalog)
+# for catalog in catalog_resuslt:
+# 	# print(catalog)
+
+item_result = session.query(Item).all()
+for item in item_result:
+	print(item.name)
+
+
+session.query(Item).filter_by(name='amazon').update({'catalog_name': 'food'})
+session.commit()
 
 item_result = session.query(Item).all()
 for item in item_result:
