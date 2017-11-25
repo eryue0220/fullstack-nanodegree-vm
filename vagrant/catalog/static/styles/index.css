@@ -11,7 +11,7 @@
 
 .tab {
 	width: 620px;
-	margin: 0 auto;
+	/*margin: 0 auto;*/
 }
 
 .tab-header {
@@ -19,7 +19,7 @@
 }
 
 .tab-header .tab-header__list {
-	display: flex;
+	display: inline-flex;
 	flex-wrap: nowrap;
 	align-content: center;
 	height: 100%;
@@ -49,6 +49,10 @@
 	flex-wrap: wrap;
 }
 
+.tab-content__item div {
+	width: 100%;
+}
+
 .tab-content__item a {
 	display: inline-block;
 	height: 40px;
@@ -68,3 +72,14 @@
 	text-align: center;
 	font-size: 16px;
 }
+
+.add {
+	margin-top: 30px;
+	border-bottom: 1px solid #efefef;
+	font-size: 18px;
+}
+
+.add a {
+	font-weight: 500;
+}
+

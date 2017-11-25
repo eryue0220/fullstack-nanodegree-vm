@@ -32,23 +32,35 @@
 					{% for catalog in result %}
 						{% if loop.index == 1%}
 						<div class="tab-content__item active" data-index={{loop.index}}>
-							{% for item in result[catalog] %}
-							<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
-								<span>{{ item|capitalize }}</span>
-							</a>
-							{% endfor %}
+							<div>
+								{% for item in result[catalog] %}
+								<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
+									<span>{{ item|capitalize }}</span>
+								</a>
+								{% endfor %}
+							</div>
 						</div>
 						{% else %}
 						<div class="tab-content__item" data-index={{loop.index}}>
-							{% for item in result[catalog] %}
-							<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
-								<span>{{ item|capitalize }}</span>
-							</a>
-							{% endfor %}
-						</div>
+							<div>
+								{% for item in result[catalog] %}
+									<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
+										<span>{{ item|capitalize }}</span>
+									</a>
+								{% endfor %}
+							</div>
 						{% endif %}
 					{% endfor %}
 				</div>
+			</div>
+			<div class="add">
+				<p>Need more Catalogs?
+					<a target="_blank" href="{{url_for('addCatalog')}}">click here.</a>
+				</p>
+				<p>or</p>
+				<p>Add more items you want?
+					<a target="_blank" href="{{url_for('addItem')}}">click here.</a>
+				</p>
 			</div>
 		</div>
 	</div>

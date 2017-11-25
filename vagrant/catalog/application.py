@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import request, Flask, render_template, redirect, jsonify, url_for
-from flask import make_response, session as login_session
+from flask import make_response, session as login_session, flash
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from db.db_setup import Base, User, Catalog, Item
@@ -49,9 +49,51 @@ def signin():
     return render_template('signin.html')
 
 
-@app.route('/add', methods=['GET', 'POST'])
-def addCatalogItem():
-    return render_template('add.html')
+@app.route('/add/catalog', methods=['GET', 'POST'])
+def addCatalog():
+    if request.method == 'GET': 
+        return render_template('add.html')
+
+    if request.method == 'POST':
+        form = request.form
+        catalogName = form['catalog'].lower()
+        query = session.query(Catalog).filter_by(name=catalogName).one_or_none()
+
+        if not query:
+            catalog = Catalog(name=catalogName)
+            session.add(catalog)
+            session.commit()
+            return redirect(url_for('index'))
+        else:
+            flash('Current Catalog has existed.')
+            return render_template('add.html')
+
+
+@app.route('/add/item', methods=['GET', 'POST'])
+def addItem():
+    catalogs = session.query(Catalog).all()
+    if request.method == 'GET':
+        return render_template('add_item.html', catalogs=catalogs)
+
+    if request.method == 'POST':
+        form = request.form
+        name = form['name']
+        catalogName = form['catalog']
+        description = form['description']
+        query = session.query(Item).filter_by(name=name).one_or_none()
+
+        if not query:
+            new_item = Item(
+                name=name,
+                catalog_name=catalogName,
+                description=description
+            )
+            session.add(new_item)
+            session.commit()
+            return redirect(url_for('index'))
+        else:
+            flash('Item Name has existed.')
+            return render_template('add_item.html', catalogs=catalogs)
 
 
 @app.route('/catalog/<catalog>/<item>')
@@ -148,5 +190,6 @@ def catalog_item_api(item):
 
 
 if __name__ == '__main__':
+    app.secret_key = 'cin_chen'
     app.debug = True
     app.run(host='0.0.0.0', port=8000)
