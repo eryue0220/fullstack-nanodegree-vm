@@ -39,14 +39,57 @@ def index():
     return render_template('index.html', result = result)
 
 
-@app.route('/signup')
-def signup():
-    return render_template('signup.html')
-
-
-@app.route('/signin')
+@app.route('/signin', methods=['GET', 'POST'])
 def signin():
-    return render_template('signin.html')
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    login_session['state'] = state
+
+    if request.method == 'GET':
+        return render_template('signin.html', STATE=state)
+    if request.method == 'POST':
+        pass
+
+
+@app.route('/fbconnect', methods=['POST'])
+def fbconnect():
+    if request.args['state'] != login_session['state']:
+        response = make_response('Invalid Request State Parameter', 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    facebook_host = 'https://graph.facebook.com'
+    access_token = request.data
+    secret_file = open('fb_client_secret.json', 'r').read()
+    app_id = json.loads(secret_file)['web']['app_id']
+    app_secret = json.loads(secret_file)['web']['app_secret']
+    url = facebook_host + '/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
+            app_id, app_secret, access_token
+        )
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[1]
+    token = result.split(',')[0].split(':')[1].replace('"', '')
+    user_info_url = facebook_host + '/v2.8/me?access_token=%s&fields=name,id,email' % token
+    h = httplib2.Http()
+    user_info_result = h.request(user_info_url, 'GET')[1]
+    user_info = json.loads(user_info_result)
+    login_session['provider'] = 'facebook'
+    login_session['use_name'] = user_info['name']
+    login_session['email'] = user_info['email']
+    login_session['user_id'] = user_info['id']
+
+    # request for user pic
+    picture_url = facebook_host + '/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    h = httplib2.Http()
+    pic_info_json = h.request(picture_url, 'GET')[1]
+    pic_info = json.loads(pic_info_json)
+    print(pic_info)
+    login_session['picture'] = pic_info['data']['url']
+
+
+
+@app.route('/fbdisconnect', methods=['POST'])
+def fbdisconnect():
+    pass
 
 
 @app.route('/add/catalog', methods=['GET', 'POST'])
@@ -190,6 +233,6 @@ def catalog_item_api(item):
 
 
 if __name__ == '__main__':
-    app.secret_key = 'cin_chen'
+    app.secret_key = 'super_secret_key'
     app.debug = True
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=5000)

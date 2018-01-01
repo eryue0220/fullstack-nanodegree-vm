@@ -25,7 +25,7 @@
 }
 
 .pagination-auth__third-login {
-	margin-bottom: 20px;
+	margin: 20px 0;
 }
 
 .pagination-auth__third-login .fb-signup {
@@ -47,6 +47,10 @@
 
 .pagination-auth__third-login .gool-signup .third-login__btn {
 	background: #db5048;
+}
+
+.third-login__btn a {
+	color: #fff;
 }
 
 .split-line span {
@@ -77,11 +81,11 @@
     border-bottom: 1px solid #e4e4e4;
 }
 
-.pagination-auth__sinup ul {
+.pagination-auth__signup ul {
 	padding: 0;
 }
 
-.pagination-auth__sinup .pagination-auth__sinup-input {
+.pagination-auth__signup .pagination-auth__signup-input {
 	position: relative;
 	height: 42px;
 	line-height: 42px;
@@ -90,7 +94,7 @@
 	overflow: hidden;
 }
 
-.pagination-auth__sinup .pagination-auth__sinup-input input {
+.pagination-auth__signup .pagination-auth__signup-input input {
 	position: absolute;
 	width: 270px;
 	line-height: 23px;
@@ -100,16 +104,15 @@
 	color: #333;
 }
 
-.pagination-auth__sinup .pagination-auth__sinup-btn {
+.pagination-auth__signup .pagination-auth__signup-btn {
 	margin-top: 15px;
 	text-align: center;
 }
 
-.pagination-auth__sinup-btn button {
+.pagination-auth__signup-btn button {
 	padding: 10px 15px;
 	background: #4285f4;
 	border: none;
 	color: #fff;
 	outline: none;
 }
-
