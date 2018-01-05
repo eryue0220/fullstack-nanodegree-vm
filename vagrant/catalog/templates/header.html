@@ -10,7 +10,11 @@
 			<ul class="user-nav">
 				<li class="user-nav__list">
 					<div class="user-area user-login__area">
+						{% if 'user_name' not in session %}
 						<a class="user-btn user-login__btn" href="{{url_for('signin')}}">Sign In</a>
+						{% else %}
+						<a class="user-btn user-login__btn" href="{{url_for('signout')}}">Sign Out</a>
+						{% endif %}
 					</div>
 				</li>
 			</ul>

@@ -14,7 +14,7 @@
 		<div class="content">
 			<div class="tab">
 				<div class="tab-header">
-					<ul class="tab-header__list">
+					<ul class="tab-header__l`t">
 						{% for catalog in result %}
 							{% if loop.index == 1 %}
 							<li class="tab-header__list-item active" data-index={{loop.index}}>
@@ -53,15 +53,17 @@
 					{% endfor %}
 				</div>
 			</div>
-			<div class="add">
-				<p>Need more Catalogs?
-					<a target="_blank" href="{{url_for('addCatalog')}}">click here.</a>
-				</p>
-				<p>or</p>
-				<p>Add more items you want?
-					<a target="_blank" href="{{url_for('addItem')}}">click here.</a>
-				</p>
-			</div>
+			{% if is_login %}
+				<div class="add">
+					<p>Need more Catalogs?
+						<a target="_blank" href="{{url_for('addCatalog')}}">click here.</a>
+					</p>
+					<p>or</p>
+					<p>Add more items you want?
+						<a target="_blank" href="{{url_for('addItem')}}">click here.</a>
+					</p>
+				</div>
+			{% endif %}
 		</div>
 	</div>
 </main>

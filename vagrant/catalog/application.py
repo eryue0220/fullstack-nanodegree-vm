@@ -3,27 +3,27 @@
 
 from flask import request, Flask, render_template, redirect, jsonify, url_for
 from flask import make_response, session as login_session, flash
-from sqlalchemy import create_engine, asc
-from sqlalchemy.orm import sessionmaker
-from db.db_setup import Base, User, Catalog, Item
+from sqlalchemy import asc
+from db.db_setup import Catalog, Item
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 from unicodedata import normalize
+from db_session import db_session
+from user import get_user_id, create_user
 import httplib2
 import requests
 import json
 import string
 import random
 
+
 app = Flask(__name__)
-engine = create_engine('sqlite:///catalog.db')
-Base.metadata.bind = engine
-session = sessionmaker(bind=engine)()
+
 
 @app.route('/')
 def index():
-    catalogs = session.query(Catalog).all()
-    items = session.query(Item).all()
+    catalogs = db_session.query(Catalog).all()
+    items = db_session.query(Item).all()
     result = {}
 
     for catalog in catalogs:
@@ -36,18 +36,29 @@ def index():
                     result[catalog_name] = {}
                 result[catalog_name][item_name] = item_description
 
-    return render_template('index.html', result = result)
+    return render_template(
+        'index.html',
+        result = result,
+        is_login = login_session.get('user_name')
+    )
 
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
-
-    if request.method == 'GET':
+    if request.method == 'GET' and 'user_name' not in login_session:
         return render_template('signin.html', STATE=state)
-    if request.method == 'POST':
-        pass
+    elif 'user_name' in login_session:
+        return redirect(url_for('index'))
+
+
+@app.route('/signout', methods=['GET', 'POST'])
+def signout():
+    del login_session['user_name']
+    del login_session['email']
+    del login_session['user_id']
+    return redirect(url_for('index'))
 
 
 @app.route('/fbconnect', methods=['POST'])
@@ -73,18 +84,17 @@ def fbconnect():
     user_info_result = h.request(user_info_url, 'GET')[1]
     user_info = json.loads(user_info_result)
     login_session['provider'] = 'facebook'
-    login_session['use_name'] = user_info['name']
+    login_session['user_name'] = user_info['name']
     login_session['email'] = user_info['email']
-    login_session['user_id'] = user_info['id']
 
-    # request for user pic
-    picture_url = facebook_host + '/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
-    h = httplib2.Http()
-    pic_info_json = h.request(picture_url, 'GET')[1]
-    pic_info = json.loads(pic_info_json)
-    print(pic_info)
-    login_session['picture'] = pic_info['data']['url']
+    user_id = get_user_id(login_session['email'])
 
+    if not user_id:
+        user_id = create_user(login_session)
+
+    login_session['user_id'] = user_id
+
+    return redirect(url_for('index'))
 
 
 @app.route('/fbdisconnect', methods=['POST'])
@@ -100,12 +110,12 @@ def addCatalog():
     if request.method == 'POST':
         form = request.form
         catalogName = form['catalog'].lower()
-        query = session.query(Catalog).filter_by(name=catalogName).one_or_none()
+        query = db_session.query(Catalog).filter_by(name=catalogName).one_or_none()
 
         if not query:
             catalog = Catalog(name=catalogName)
-            session.add(catalog)
-            session.commit()
+            db_session.add(catalog)
+            db_session.commit()
             return redirect(url_for('index'))
         else:
             flash('Current Catalog has existed.')
@@ -114,7 +124,7 @@ def addCatalog():
 
 @app.route('/add/item', methods=['GET', 'POST'])
 def addItem():
-    catalogs = session.query(Catalog).all()
+    catalogs = db_session.query(Catalog).all()
     if request.method == 'GET':
         return render_template('add_item.html', catalogs=catalogs)
 
@@ -123,7 +133,7 @@ def addItem():
         name = form['name']
         catalogName = form['catalog']
         description = form['description']
-        query = session.query(Item).filter_by(name=name).one_or_none()
+        query = db_session.query(Item).filter_by(name=name).one_or_none()
 
         if not query:
             new_item = Item(
@@ -131,8 +141,8 @@ def addItem():
                 catalog_name=catalogName,
                 description=description
             )
-            session.add(new_item)
-            session.commit()
+            db_session.add(new_item)
+            db_session.commit()
             return redirect(url_for('index'))
         else:
             flash('Item Name has existed.')
@@ -141,7 +151,7 @@ def addItem():
 
 @app.route('/catalog/<catalog>/<item>')
 def catalogItem(catalog, item):
-    result = session.query(Item).filter_by(name=item).one_or_none()
+    result = db_session.query(Item).filter_by(name=item).one_or_none()
     return render_template(
         'detail.html',
         catalog=catalog,
@@ -153,11 +163,11 @@ def catalogItem(catalog, item):
 
 @app.route('/catalog/<catalog>/<item>/edit', methods=['GET', 'POST'])
 def editCatalogItem(catalog, item):
-    selected_item = session.query(Item).filter_by(name=item).one_or_none()
+    selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     hasChange = False
 
     if request.method == 'GET':
-        all_catalogs = session.query(Catalog).all()
+        all_catalogs = db_session.query(Catalog).all()
         return render_template(
             'edit.html',
             catalog=catalog,
@@ -181,8 +191,8 @@ def editCatalogItem(catalog, item):
             hasChange = True
 
         if hasChange:
-            session.add(selected_item)
-            session.commit()
+            db_session.add(selected_item)
+            db_session.commit()
 
         return redirect(url_for(
             'catalogItem',
@@ -194,9 +204,9 @@ def editCatalogItem(catalog, item):
 # delete operation api
 @app.route('/api/v1/catalog/<item>/delete')
 def deleteItem(item):
-    selected_item = session.query(Item).filter_by(name=item).one_or_none()
-    session.delete(selected_item)
-    session.commit()
+    selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
+    db_session.delete(selected_item)
+    db_session.commit()
     response = {'status': 0, 'msg': 'Delete Success'}
     return jsonify(response), 200
 
@@ -204,13 +214,13 @@ def deleteItem(item):
 # JSON APIs
 @app.route('/api/v1/catalogs.json')
 def catalogs_api():
-    result = session.query(Catalog).all()
+    result = db_session.query(Catalog).all()
     return jsonify([i.serialize for i in result])
 
 
 @app.route('/api/v1/catalog/<catalog>.json')
 def catalog_api(catalog):
-    query = session.query(Item).filter_by(catalog_name=catalog).all()
+    query = db_session.query(Item).filter_by(catalog_name=catalog).all()
     result = []
     for i in query:
         result.append({
@@ -223,7 +233,7 @@ def catalog_api(catalog):
 
 @app.route('/api/v1/catalog/<item>.json')
 def catalog_item_api(item):
-    result = session.query(Item).filter_by(name=item).one_or_none()
+    result = db_session.query(Item).filter_by(name=item).one_or_none()
     CatalogItem = {
         'name': result.name,
         'description': result.description,

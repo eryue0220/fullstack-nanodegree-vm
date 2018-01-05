@@ -36,7 +36,7 @@
         contentType: 'application/octet-stream; charset=utf-8',
         success: function(res) {
           if (res) {
-              $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
+              // $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
               setTimeout(function() {
                   window.location.href = "/"
               }, 4000)
@@ -61,11 +61,6 @@
 							<fb:login-button data-width="348" data-size="large" scope="public_profile,email" onlogin="sendTokenToServer();">
             		<a href='javascript:sendTokenToServer()'>Sign in with Facebook</a>
         			</fb:login-button>
-						</button>
-					</div>
-					<div class="third-login gool-signup">
-						<button class="third-login__btn" type="button">
-							<span>Sign in with Google Plus</span>
 						</button>
 					</div>
 				</div>

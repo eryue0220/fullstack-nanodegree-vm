@@ -11,10 +11,9 @@ Base = declarative_base()
 class User(Base):
 	__tablename__ = 'user'
 
-	id = Column(Integer, primary_key=True)
-	name = Column(String(250), nullable=False)
-	passwd = Column(String(250), nullable=False)
+	id = Column(Integer, autoincrement=True, primary_key=True)
 	email = Column(String(80), nullable=False)
+	name = Column(String(250), nullable=False)
 
 
 class Catalog(Base):
@@ -47,5 +46,5 @@ class Item(Base):
 		}
 
 
-engine = create_engine('sqlite:///catalog.db')
+engine = create_engine('sqlite:///../catalog.db')
 Base.metadata.create_all(engine)
