@@ -1,0 +1,24 @@
+<header role="header" class="catalog_header__container">
+	<h1 style="display: none;">Catalog</h1>
+	<div class="catalog-header__title">
+		<h3>
+			<a href="{{url_for('index')}}">Catalog APP</a>
+		</h3>
+	</div>
+	<nav class="nav_bar">
+		<div class="nav_bar_container">
+			<ul class="user-nav">
+				<li class="user-nav__list">
+					<div class="user-area user-register__area">
+						<a class="user-btn user-register__btn" href="{{url_for('signup')}}">Sign Up</a>
+					</div>
+				</li>
+				<li class="user-nav__list">
+					<div class="user-area user-login__area">
+						<a class="user-btn user-login__btn" href="{{url_for('signin')}}">Sign In</a>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</nav>
+</header>

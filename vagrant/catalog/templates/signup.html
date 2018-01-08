@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+
+{% block title %}
+<title>Catalog - Sign Up to Become Catalog User</title>
+{% endblock %}
+
+{% block styles %}
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles/signup.css') }}">
+{% endblock %}
+
+{% block content%}
+<main id="site-content" role="main">
+	<div class="pagination-auth container">
+		<div class="pagination-auth-content row">
+			<div class="pagination-auth-box col-md-4 col-md-offset-4">
+				<div>
+					<h4>Has an Account?</h4>
+					<p>
+						<a href="{{url_for('signin')}}">Login now</a>
+					</p>
+				</div>
+				<div class="pagination-auth__third-login">
+					<div class="third-login fb-signup">
+						<button class="third-login__btn" type="button">
+							<span>Sign up with Facebook</span>
+						</button>
+					</div>
+					<div class="third-login gool-signup">
+						<button class="third-login__btn" type="button">
+							<span>Sign up with Google Plus</span>
+						</button>
+					</div>
+				</div>
+				<div class="split-line">
+					<span>OR</span>
+				</div>
+				<div class="pagination-auth__sinup">
+					<ul>
+						<li class="pagination-auth__sinup-input">
+							<input type="text" placeholder="Username" name="username" autocomplete="false" />
+						</li>
+						<li class="pagination-auth__sinup-input">
+							<input type="text" placeholder="Email" name="email" autocomplete="false" />
+						</li>
+						<li class="pagination-auth__sinup-input">
+							<input type="text" placeholder="Password" name="passwd" autocomplete="false" />
+						</li>
+						<li class="pagination-auth__sinup-input">
+							<input type="text" placeholder="Password Again" name="passwd2" autocomplete="false" />
+						</li>
+						<li class="pagination-auth__sinup-btn">
+							<button type="button">
+								Sign Up
+							</button>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
+{% endblock %}
