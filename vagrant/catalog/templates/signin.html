@@ -2,52 +2,14 @@
 
 {% block title %}
 <title>Catalog - Signin</title>
+<meta name="google-signin-scope" content="profile email">
+ <meta name="google-signin-client_id" content="595409718148-20msa83bp9olaustssgugupts69n54aj.apps.googleusercontent.com">
 {% endblock %}
 
 {% block styles %}
 <link rel=stylesheet type=text/css href="{{url_for('static', filename='styles/signin.css')}}">
 <script src="{{url_for('static', filename='scripts/jquery.js')}}"></script>
-<script>
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId: '173461623220359',
-      cookie: true,
-      xfbml: true,
-      version: 'v2.2'
-    })
-  }
-  !(function(d, s, id) {
-    var fjs = d.getElementsByTagName(s)[0]
-    var js
-    if (d.getElementById(id)) return
-    js = document.createElement(s)
-    js.src = '//connect.facebook.net/en_US/sdk.js'
-    fjs.parentNode.insertBefore(js, fjs)
-  })(document, 'script', 'facebook-jssdk');
-
-  function sendTokenToServer() {
-    var access_token = FB.getAuthResponse()['accessToken']
-    FB.api('/me', function(response) {
-      $.ajax({
-        type: 'POST',
-        url: '/fbconnect?state={{STATE}}',
-        data: access_token,
-        proccessData: false,
-        contentType: 'application/octet-stream; charset=utf-8',
-        success: function(res) {
-          if (res) {
-              // $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
-              setTimeout(function() {
-                  window.location.href = "/"
-              }, 4000)
-          } else {
-              $('#result').html('Failed to make a server-side call. Check your configuration and console.')
-          }
-      	}
-    	})
-    })
-  }
-</script>
+<script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
 {% endblock %}
 
 {% block content %}
@@ -56,16 +18,40 @@
 		<div class="pagination-auth-content row">
 			<div class="pagination-auth-box col-md-4 col-md-offset-4">
 				<div class="pagination-auth__third-login">
-					<div class="third-login fb-signup">
-						<button class="third-login__btn" type="button">
-							<fb:login-button data-width="348" data-size="large" scope="public_profile,email" onlogin="sendTokenToServer();">
-            		<a href='javascript:sendTokenToServer()'>Sign in with Facebook</a>
-        			</fb:login-button>
-						</button>
+					<div class="third-login gool-signup">
+						<div
+              class="g-signin"
+              data-scope="openid"
+              data-clientid="595409718148-20msa83bp9olaustssgugupts69n54aj.apps.googleusercontent.com"
+              data-redirecturi="postmessage"
+              data-accesstype="offline"
+              data-cookiepolicy="single_host_origin"
+              data-callback="onSignIn"
+            ></div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 </main>
+<script>
+  function onSignIn(googleUser) {
+    if (googleUser['code']) {
+      $.ajax({
+        type: 'POST',
+        url: '/gconnect?stat={{STATE}}',
+        proccessData: false,
+        contentType: 'application/octet-stream; charset="utf-8"',
+        data: googleUser.code,
+        success: function(result) {
+          if (result && result.code === 1) {
+            window.location.href = '/';
+          } else {
+            // handle signin error
+          }
+        }
+      });
+    }
+  }
+</script>
 {% endblock %}

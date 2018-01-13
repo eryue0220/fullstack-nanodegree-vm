@@ -16,8 +16,10 @@ import json
 import string
 import random
 
-
 app = Flask(__name__)
+
+CLIENT_ID = json.loads(
+    open('google_client_secret.json', 'r').read())['web']['client_id']
 
 
 @app.route('/')
@@ -61,44 +63,59 @@ def signout():
     return redirect(url_for('index'))
 
 
-@app.route('/fbconnect', methods=['POST'])
-def fbconnect():
-    if request.args['state'] != login_session['state']:
-        response = make_response('Invalid Request State Parameter', 401)
+@app.route('/gconnect', methods=['POST'])
+def gconnect():
+    if requests.args.get('state') != login_session['state']:
+        response = make_response(json.dumps('Invalid state'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    facebook_host = 'https://graph.facebook.com'
-    access_token = request.data
-    secret_file = open('fb_client_secret.json', 'r').read()
-    app_id = json.loads(secret_file)['web']['app_id']
-    app_secret = json.loads(secret_file)['web']['app_secret']
-    url = facebook_host + '/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
-            app_id, app_secret, access_token
-        )
+    code = requests.data
+    try:
+        oauth_flow = flow_from_clientsecrets('google_client_secret.json',
+            scope='')
+        oauth_flow.redirect_uri = 'postmessage'
+        credentials = oauth_flow.step2_exchange(code)
+    except FlowExchangeError:
+        response = make_response(
+            json.dumps('Failed to upgrade the authorized code.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    access_token = credentials.access_token
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
+        % access_token)
     h = httplib2.Http()
-    result = h.request(url, 'GET')[1]
-    token = result.split(',')[0].split(':')[1].replace('"', '')
-    user_info_url = facebook_host + '/v2.8/me?access_token=%s&fields=name,id,email' % token
-    h = httplib2.Http()
-    user_info_result = h.request(user_info_url, 'GET')[1]
-    user_info = json.loads(user_info_result)
-    login_session['provider'] = 'facebook'
-    login_session['user_name'] = user_info['name']
-    login_session['email'] = user_info['email']
+    result = json.loads(h.request(url, 'GET')[1])
 
-    user_id = get_user_id(login_session['email'])
+    if result.get('error') is not None:
+        response = make_response(json.dumps(result.get('error')), 500)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
-    if not user_id:
-        user_id = create_user(login_session)
+    gplus_id = credentials.id_token['sub']
+    if result['user_id'] != gplus_id:
+        response = make_response(
+            joson.dumps('Token user id doesn\'t match given id'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
-    login_session['user_id'] = user_id
+    stored_credentials = login_session.get('credentials')
+    stored_gplus_id = login_session.get('gplus_id')
+    if stored_credentials is not None and gplus_id == stored_gplus_id:
+        reposne = make_response(json.dumps('Current User signin'), 200)
+        response.headers['Content-Type'] = 'application/json'
 
-    return redirect(url_for('index'))
+    login_session['credentials'] = credentials
+    login_session['gplus_id'] = gplus_id
+    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
+    params = {
+        'access_token': credentials.access_token
+    }
 
 
-@app.route('/fbdisconnect', methods=['POST'])
-def fbdisconnect():
+@app.route('/gdisconnect', methods=['POST'])
+def gdisconnect():
     pass
 
 
@@ -245,4 +262,4 @@ def catalog_item_api(item):
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.debug = True
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='127.0.0.1', port=5000)

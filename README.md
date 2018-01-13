@@ -10,9 +10,9 @@
 
 First, you should be sure you have installed the list of softwares below:
 
-1. [Vagrant](https://www.vagrantup.com/)
+1. [Python](https://www.python.org/)
 
-2. [Python](https://www.python.org/)
+2. flask
 
 It's very important for you to review this project in browser laterly.
 
@@ -22,15 +22,9 @@ Supposing you have installed all the aforementioned softwares. Then, following t
 
 1. Change your work path to run `cd .../fullstack-nanodegree-vm/vagrant/` in your terminal.
 
-2. Run `vagrant up`. If you are the first time, it will take a long time, just patiently.
+2. Run the python app throught `python application.py`
 
-3. After finished, then run `vagrant ssh`
-
-4. Then change the path to `cd /vagrant/catalog/`
-
-5. Run the python app throught `python application.py`
-
-6. Open your browser, and entered `0.0.0.0:5000`. 
+3. Open your browser, and entered `localhost:5000`. 
 
 ## TrobuleShooting
 

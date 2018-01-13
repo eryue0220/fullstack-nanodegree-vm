@@ -28,7 +28,7 @@
 	margin: 20px 0;
 }
 
-.pagination-auth__third-login .fb-signup {
+.pagination-auth__third-login .gool-signup {
 	margin-bottom: 10px;
 }
 
@@ -39,10 +39,6 @@
 	border: none;
 	outline: none;
 	color: #fff;
-}
-
-.pagination-auth__third-login .fb-signup .third-login__btn {
-	background: #3c5996;
 }
 
 .pagination-auth__third-login .gool-signup .third-login__btn {
