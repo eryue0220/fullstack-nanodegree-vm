@@ -14,17 +14,22 @@ First, you should be sure you have installed the list of softwares below:
 
 2. flask
 
+3. [Google Email Account](http://mail.google.com/)
+
 It's very important for you to review this project in browser laterly.
 
 ### 1. Review in Browser
 
 Supposing you have installed all the aforementioned softwares. Then, following these step:
 
-1. Change your work path to run `cd .../fullstack-nanodegree-vm/vagrant/` in your terminal.
+1. Change your work path to run `cd YOUR/OWN/PATH/fullstack-nanodegree-vm/vagrant/catalog/` in your terminal.
 
 2. Run the python app throught `python application.py`
 
-3. Open your browser, and entered `localhost:5000`. 
+3. Open your browser, and entered `localhost:5000`.
+
+> **Note**
+> It must be reviewed in `localhost:5000`, because of the google service is limited.
 
 ## TrobuleShooting
 

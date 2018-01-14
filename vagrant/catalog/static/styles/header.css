@@ -28,20 +28,22 @@ a, a:hover {
 }
 
 .nav_bar {
-	position: absolute;
-	top: 0;
-	right: 30px;
+	float: right;
+	margin: 13px 20px 0 0;
 }
 
-.nav_bar .user-nav__list {
-	display: inline-block;
-	height: 60px;
-	line-height: 60px;
-	margin: 0 20px;
-}
-
-.user-nav__list .user-area .user-btn {
+.user-area .user-btn {
 	color: #484848;
 	font-size: 14px;
 	text-decoration: none;
+}
+
+.user-signout {
+	cursor: pointer;
+}
+
+.user-area .user-profile {
+	width: 35px;
+	height: 35px;
+	border-radius: 50%;
 }

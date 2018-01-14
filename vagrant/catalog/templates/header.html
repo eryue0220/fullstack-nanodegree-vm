@@ -7,17 +7,14 @@
 	</div>
 	<nav class="nav_bar">
 		<div class="nav_bar_container">
-			<ul class="user-nav">
-				<li class="user-nav__list">
-					<div class="user-area user-login__area">
-						{% if 'user_name' not in session %}
-						<a class="user-btn user-login__btn" href="{{url_for('signin')}}">Sign In</a>
-						{% else %}
-						<a class="user-btn user-login__btn" href="{{url_for('signout')}}">Sign Out</a>
-						{% endif %}
-					</div>
-				</li>
-			</ul>
+			<div class="user-area user-login__area">
+				{% if 'username' not in session %}
+				<a class="user-btn user-login__btn" href="{{url_for('signin')}}">Sign In</a>
+				{% else %}
+				<img class="user-profile" src="{{session['picture']}}" alt="user_profile"/>
+				<a class="user-btn user-login__btn user-signout js-user-signout">Sign Out</a>
+				{% endif %}
+			</div>
 		</div>
 	</nav>
 </header>

@@ -31,63 +31,57 @@ def index():
     for catalog in catalogs:
         for item in items:
             if item.catalog_name == catalog.name:
-                catalog_name = normalize('NFKD', catalog.name).encode('ascii','ignore')
-                item_name = normalize('NFKD', item.name).encode('ascii','ignore')
-                item_description = normalize('NFKD', item.description).encode('ascii','ignore')
+                catalog_name = normalize('NFKD', catalog.name)
+                .encode('ascii', 'ignore')
+                item_name = normalize('NFKD', item.name)
+                .encode('ascii', 'ignore')
+                item_description = normalize('NFKD', item.description)
+                .encode('ascii', 'ignore')
                 if not result.get(catalog_name):
                     result[catalog_name] = {}
                 result[catalog_name][item_name] = item_description
 
-    return render_template(
-        'index.html',
-        result = result,
-        is_login = login_session.get('user_name')
-    )
+    return render_template('index.html', result=result)
 
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    state = ''.join(
+        random.choice(string.ascii_uppercase + string.digits)
+        for x in range(32))
     login_session['state'] = state
-    if request.method == 'GET' and 'user_name' not in login_session:
+    if request.method == 'GET' and 'username' not in login_session:
         return render_template('signin.html', STATE=state)
-    elif 'user_name' in login_session:
+    elif 'username' in login_session:
         return redirect(url_for('index'))
-
-
-@app.route('/signout', methods=['GET', 'POST'])
-def signout():
-    del login_session['user_name']
-    del login_session['email']
-    del login_session['user_id']
-    return redirect(url_for('index'))
 
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
-    if requests.args.get('state') != login_session['state']:
-        response = make_response(json.dumps('Invalid state'), 401)
+    if request.args.get('state') != login_session['state']:
+        response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    code = requests.data
+    code = request.data
+    print(code)
     try:
-        oauth_flow = flow_from_clientsecrets('google_client_secret.json',
-            scope='')
+        oauth_flow = flow_from_clientsecrets(
+            'google_client_secret.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
+        print(oauth_flow)
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
         response = make_response(
-            json.dumps('Failed to upgrade the authorized code.'), 401)
+            json.dumps('Failed to upgrade the authorization code.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     access_token = credentials.access_token
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
-        % access_token)
+           % access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
-
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
         response.headers['Content-Type'] = 'application/json'
@@ -96,38 +90,78 @@ def gconnect():
     gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
         response = make_response(
-            joson.dumps('Token user id doesn\'t match given id'), 401)
+            json.dumps("Token's user ID doesn't match given user ID."), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    stored_credentials = login_session.get('credentials')
-    stored_gplus_id = login_session.get('gplus_id')
-    if stored_credentials is not None and gplus_id == stored_gplus_id:
-        reposne = make_response(json.dumps('Current User signin'), 200)
+    if result['issued_to'] != CLIENT_ID:
+        response = make_response(
+            json.dumps("Token's client ID does not match app's."), 401)
         response.headers['Content-Type'] = 'application/json'
+        return response
 
-    login_session['credentials'] = credentials
+    stored_access_token = login_session.get('access_token')
+    stored_gplus_id = login_session.get('gplus_id')
+    if stored_access_token is not None and gplus_id == stored_gplus_id:
+        response = make_response(
+            json.dumps('Current user is already connected.'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    login_session['access_token'] = credentials.access_token
     login_session['gplus_id'] = gplus_id
-    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-    params = {
-        'access_token': credentials.access_token
-    }
+    userinfo_url = 'https://www.googleapis.com/oauth2/v1/userinfo'
+    params = {'access_token': credentials.access_token, 'alt': 'json'}
+    answer = requests.get(userinfo_url, params=params)
+    data = answer.json()
+    login_session['username'] = data['name']
+    login_session['picture'] = data['picture']
+    login_session['email'] = data['email']
+    response = make_response(
+        json.dumps({'code': 1, 'msg': 'login success'}), 200)
+    response.headers['Content-Type'] = 'application/json'
+
+    return response
 
 
 @app.route('/gdisconnect', methods=['POST'])
 def gdisconnect():
-    pass
+    access_token = login_session['access_token']
+    if access_token is None:
+        response = make_response(json.dumps('Current User not connected'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' %
+    login_session['access_token']
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+
+    if result['status'] == 200:
+        del login_session['access_token']
+        del login_session['gplus_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+        response = make_response(json.dumps('Successfully disconnect'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        response = make_response(json.dumps('Failed to revoke'), 400)
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 
 @app.route('/add/catalog', methods=['GET', 'POST'])
 def addCatalog():
-    if request.method == 'GET': 
+    if request.method == 'GET':
         return render_template('add.html')
 
     if request.method == 'POST':
         form = request.form
         catalogName = form['catalog'].lower()
-        query = db_session.query(Catalog).filter_by(name=catalogName).one_or_none()
+        query = db_session.query(Catalog).filter_by(name=catalogName)
+        .one_or_none()
 
         if not query:
             catalog = Catalog(name=catalogName)
@@ -199,7 +233,8 @@ def editCatalogItem(catalog, item):
             selected_item.name = form['name']
             hasChange = True
 
-        if form['description'] and form['description'] != selected_item.description:
+        if form['description'] and form['description'] !=
+        selected_item.description:
             selected_item.description = form['description']
             hasChange = True
 

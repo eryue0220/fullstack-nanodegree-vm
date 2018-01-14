@@ -6,6 +6,7 @@
 
 {% block styles %}
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles/index.css') }}">
+<script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
 {% endblock %}
 
 {% block content %}
@@ -18,11 +19,11 @@
 						{% for catalog in result %}
 							{% if loop.index == 1 %}
 							<li class="tab-header__list-item active" data-index={{loop.index}}>
-								{{ catalog|capitalize }}
+								{{ catalog.decode()|capitalize }}
 							</li>
 							{% else %}
 							<li class="tab-header__list-item" data-index={{loop.index}}>
-								{{ catalog|capitalize }}
+								{{ catalog.decode()|capitalize }}
 							</li>
 							{% endif %}
 						{% endfor %}
@@ -35,7 +36,7 @@
 							<div>
 								{% for item in result[catalog] %}
 								<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
-									<span>{{ item|capitalize }}</span>
+									<span>{{ item.decode()|capitalize }}</span>
 								</a>
 								{% endfor %}
 							</div>
@@ -45,7 +46,7 @@
 							<div>
 								{% for item in result[catalog] %}
 									<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
-										<span>{{ item|capitalize }}</span>
+										<span>{{ item.decode()|capitalize }}</span>
 									</a>
 								{% endfor %}
 							</div>
@@ -53,7 +54,7 @@
 					{% endfor %}
 				</div>
 			</div>
-			{% if is_login %}
+			{% if 'username' in session %}
 				<div class="add">
 					<p>Need more Catalogs?
 						<a target="_blank" href="{{url_for('addCatalog')}}">click here.</a>
@@ -69,5 +70,25 @@
 </main>
 
 <script src="{{url_for('static', filename='scripts/jquery.js')}}"></script>
-<script src="{{url_for('static', filename='scripts/tab.js')}}"></script>
+<script src="{{url_for('static', filename='scripts/index.js')}}"></script>
+<script>
+	function signOut() {
+		var $signOut = $('.js-user-signout');
+		if ($signOut.length) {
+			$signOut.on('click', function() {
+				$.ajax({
+					type: 'POST',
+					url: "/gdisconnect",
+					proccess: false,
+					success: function(result) {
+						console.log(result);
+						window.location.href = '/';
+					}
+				})
+			})
+		}
+	}
+
+	signOut();
+</script>
 {% endblock %}
