@@ -22,6 +22,13 @@ CLIENT_ID = json.loads(
     open('google_client_secret.json', 'r').read())['web']['client_id']
 
 
+def check_is_login_user():
+    if login_session.get('username') is None:
+        response = make_response(json.dumps('authoricated Failed'), 403)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+
 @app.route('/')
 def index():
     catalogs = db_session.query(Catalog).all()
@@ -31,12 +38,12 @@ def index():
     for catalog in catalogs:
         for item in items:
             if item.catalog_name == catalog.name:
-                catalog_name = normalize('NFKD', catalog.name)
-                .encode('ascii', 'ignore')
-                item_name = normalize('NFKD', item.name)
-                .encode('ascii', 'ignore')
-                item_description = normalize('NFKD', item.description)
-                .encode('ascii', 'ignore')
+                catalog_name = normalize('NFKD', catalog.name)\
+                    .encode('ascii', 'ignore')
+                item_name = normalize('NFKD', item.name)\
+                    .encode('ascii', 'ignore')
+                item_description = normalize('NFKD', item.description)\
+                    .encode('ascii', 'ignore')
                 if not result.get(catalog_name):
                     result[catalog_name] = {}
                 result[catalog_name][item_name] = item_description
@@ -64,12 +71,10 @@ def gconnect():
         return response
 
     code = request.data
-    print(code)
     try:
         oauth_flow = flow_from_clientsecrets(
             'google_client_secret.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
-        print(oauth_flow)
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
         response = make_response(
@@ -120,7 +125,6 @@ def gconnect():
     response = make_response(
         json.dumps({'code': 1, 'msg': 'login success'}), 200)
     response.headers['Content-Type'] = 'application/json'
-
     return response
 
 
@@ -132,8 +136,8 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' %
-    login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % \
+        login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
 
@@ -154,14 +158,15 @@ def gdisconnect():
 
 @app.route('/add/catalog', methods=['GET', 'POST'])
 def addCatalog():
+    check_is_login_user()
+
     if request.method == 'GET':
         return render_template('add.html')
-
     if request.method == 'POST':
         form = request.form
         catalogName = form['catalog'].lower()
-        query = db_session.query(Catalog).filter_by(name=catalogName)
-        .one_or_none()
+        query = db_session.query(Catalog).filter_by(name=catalogName)\
+            .one_or_none()
 
         if not query:
             catalog = Catalog(name=catalogName)
@@ -175,6 +180,8 @@ def addCatalog():
 
 @app.route('/add/item', methods=['GET', 'POST'])
 def addItem():
+    check_is_login_user()
+
     catalogs = db_session.query(Catalog).all()
     if request.method == 'GET':
         return render_template('add_item.html', catalogs=catalogs)
@@ -202,18 +209,20 @@ def addItem():
 
 @app.route('/catalog/<catalog>/<item>')
 def catalogItem(catalog, item):
+    check_is_login_user()
     result = db_session.query(Item).filter_by(name=item).one_or_none()
     return render_template(
         'detail.html',
         catalog=catalog,
         item=item,
-        description=result.description,
-        is_login=True
+        description=result.description
     )
 
 
 @app.route('/catalog/<catalog>/<item>/edit', methods=['GET', 'POST'])
 def editCatalogItem(catalog, item):
+    check_is_login_user()
+
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     hasChange = False
 
@@ -229,13 +238,14 @@ def editCatalogItem(catalog, item):
     # Update Item
     if request.method == 'POST':
         form = request.form
+        form_description = form['description']
         if form['name'] and form['name'] != selected_item.name:
             selected_item.name = form['name']
             hasChange = True
 
-        if form['description'] and form['description'] !=
-        selected_item.description:
-            selected_item.description = form['description']
+        # check the post data if change
+        if form_description and form_description != selected_item.description:
+            selected_item.description = form_description
             hasChange = True
 
         if form['catalog'] and form['catalog'] != selected_item.catalog.name:
@@ -256,6 +266,7 @@ def editCatalogItem(catalog, item):
 # delete operation api
 @app.route('/api/v1/catalog/<item>/delete')
 def deleteItem(item):
+    check_is_login_user()
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     db_session.delete(selected_item)
     db_session.commit()
