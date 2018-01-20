@@ -12,59 +12,56 @@
 {% block content %}
 <main id="site-content" role="main">
 	<div class="container">
-		<div class="content">
-			<div class="tab">
-				<div class="tab-header">
-					<ul class="tab-header__list">
-						{% for catalog in result %}
-							{% if loop.index == 1 %}
-							<li class="tab-header__list-item active" data-index={{loop.index}}>
-								{{ catalog.decode()|capitalize }}
-							</li>
-							{% else %}
-							<li class="tab-header__list-item" data-index={{loop.index}}>
-								{{ catalog.decode()|capitalize }}
-							</li>
-							{% endif %}
-						{% endfor %}
-					</ul>
-				</div>
-				<div class="tab-content">
+		<div class="tab">
+			<div class="tab-header">
+				<ul class="tab-header__list">
 					{% for catalog in result %}
-						{% if loop.index == 1%}
-						<div class="tab-content__item active" data-index={{loop.index}}>
-							<div>
-								{% for item in result[catalog] %}
+						{% if loop.index == 1 %}
+						<li class="tab-header__list-item active" data-index={{loop.index}}>
+							{{ catalog.decode()|capitalize }}
+						</li>
+						{% else %}
+						<li class="tab-header__list-item" data-index={{loop.index}}>
+							{{ catalog.decode()|capitalize }}
+						</li>
+						{% endif %}
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="tab-content">
+				{% for catalog in result %}
+					{% if loop.index == 1 %}
+					<div class="tab-content__item active" data-index={{loop.index}}>
+						<div>
+							{% for item in result[catalog] %}
+							<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
+								<span>{{ item.decode()|capitalize }}</span>
+							</a>
+							{% endfor %}
+						</div>
+					</div>
+					{% else %}
+					<div class="tab-content__item" data-index={{loop.index}}>
+						<div>
+							{% for item in result[catalog] %}
 								<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
 									<span>{{ item.decode()|capitalize }}</span>
 								</a>
-								{% endfor %}
-							</div>
+							{% endfor %}
 						</div>
-						{% else %}
-						<div class="tab-content__item" data-index={{loop.index}}>
-							<div>
-								{% for item in result[catalog] %}
-									<a href="{{url_for('catalogItem', catalog=catalog, item=item)}}">
-										<span>{{ item.decode()|capitalize }}</span>
-									</a>
-								{% endfor %}
-							</div>
-						{% endif %}
-					{% endfor %}
-				</div>
+					</div>
+					{% endif %}
+				{% endfor %}
 			</div>
-			{% if 'username' in session %}
-				<div class="add">
-					<p>Need more Catalogs?
-						<a target="_blank" href="{{url_for('addCatalog')}}">click here.</a>
-					</p>
-					<p>or</p>
-					<p>Add more items you want?
-						<a target="_blank" href="{{url_for('addItem')}}">click here.</a>
-					</p>
-				</div>
-			{% endif %}
+		</div>
+		<div class="add">
+			<p>Need more Catalogs?
+				<a target="_blank" href="{{url_for('addCatalog')}}">click here.</a>
+			</p>
+			<p>or</p>
+			<p>Add more items you want?
+				<a target="_blank" href="{{url_for('addItem')}}">click here.</a>
+			</p>
 		</div>
 	</div>
 </main>

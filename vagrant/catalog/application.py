@@ -5,8 +5,6 @@ from flask import request, Flask, render_template, redirect, jsonify, url_for
 from flask import make_response, session as login_session, flash
 from sqlalchemy import asc
 from db.db_setup import Catalog, Item
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError
 from unicodedata import normalize
 from db_session import db_session
 from user import get_user_id, create_user
@@ -16,17 +14,14 @@ import json
 import string
 import random
 
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
+from oauth2client.client import AccessTokenCredentials
+
 app = Flask(__name__)
 
 CLIENT_ID = json.loads(
-    open('google_client_secret.json', 'r').read())['web']['client_id']
-
-
-def check_is_login_user():
-    if login_session.get('username') is None:
-        response = make_response(json.dumps('authoricated Failed'), 403)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+    open('client_secrets.json', 'r').read())['web']['client_id']
 
 
 @app.route('/')
@@ -34,7 +29,6 @@ def index():
     catalogs = db_session.query(Catalog).all()
     items = db_session.query(Item).all()
     result = {}
-
     for catalog in catalogs:
         for item in items:
             if item.catalog_name == catalog.name:
@@ -47,7 +41,6 @@ def index():
                 if not result.get(catalog_name):
                     result[catalog_name] = {}
                 result[catalog_name][item_name] = item_description
-
     return render_template('index.html', result=result)
 
 
@@ -70,10 +63,9 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    code = request.data
+    code = request.data.decode()
     try:
-        oauth_flow = flow_from_clientsecrets(
-            'google_client_secret.json', scope='')
+        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
@@ -136,12 +128,11 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % \
-        login_session['access_token']
+    url = ('https://accounts.google.com/o/oauth2/revoke?token=%s'
+           % access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-
-    if result['status'] == 200:
+    if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
         del login_session['username']
@@ -158,9 +149,9 @@ def gdisconnect():
 
 @app.route('/add/catalog', methods=['GET', 'POST'])
 def addCatalog():
-    check_is_login_user()
-
     if request.method == 'GET':
+        if login_session.get('username') is None:
+            return redirect(url_for('signin'))
         return render_template('add.html')
     if request.method == 'POST':
         form = request.form
@@ -172,25 +163,27 @@ def addCatalog():
             catalog = Catalog(name=catalogName)
             db_session.add(catalog)
             db_session.commit()
-            return redirect(url_for('index'))
+            flash('Category Successfully Added!')
+            return render_template('add.html')
         else:
-            flash('Current Catalog has existed.')
+            flash('Current Catalog has existed.', 'error')
             return render_template('add.html')
 
 
 @app.route('/add/item', methods=['GET', 'POST'])
 def addItem():
-    check_is_login_user()
-
-    catalogs = db_session.query(Catalog).all()
     if request.method == 'GET':
+        if login_session.get('username') is None:
+            return redirect(url_for('signin'))
+        catalogs = db_session.query(Catalog).all()
         return render_template('add_item.html', catalogs=catalogs)
-
     if request.method == 'POST':
         form = request.form
         name = form['name']
         catalogName = form['catalog']
         description = form['description']
+        catalogs = db_session.query(Catalog).all()
+
         query = db_session.query(Item).filter_by(name=name).one_or_none()
 
         if not query:
@@ -201,7 +194,8 @@ def addItem():
             )
             db_session.add(new_item)
             db_session.commit()
-            return redirect(url_for('index'))
+            flash('Add Successfully.')
+            return render_template('add_item.html', catalogs=catalogs)
         else:
             flash('Item Name has existed.')
             return render_template('add_item.html', catalogs=catalogs)
@@ -209,7 +203,6 @@ def addItem():
 
 @app.route('/catalog/<catalog>/<item>')
 def catalogItem(catalog, item):
-    check_is_login_user()
     result = db_session.query(Item).filter_by(name=item).one_or_none()
     return render_template(
         'detail.html',
@@ -221,8 +214,6 @@ def catalogItem(catalog, item):
 
 @app.route('/catalog/<catalog>/<item>/edit', methods=['GET', 'POST'])
 def editCatalogItem(catalog, item):
-    check_is_login_user()
-
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     hasChange = False
 
@@ -266,7 +257,6 @@ def editCatalogItem(catalog, item):
 # delete operation api
 @app.route('/api/v1/catalog/<item>/delete')
 def deleteItem(item):
-    check_is_login_user()
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     db_session.delete(selected_item)
     db_session.commit()
@@ -281,7 +271,7 @@ def catalogs_api():
     return jsonify([i.serialize for i in result])
 
 
-@app.route('/api/v1/catalog/<catalog>.json')
+@app.route('/api/v1/<catalog>.json')
 def catalog_api(catalog):
     query = db_session.query(Item).filter_by(catalog_name=catalog).all()
     result = []
@@ -296,13 +286,13 @@ def catalog_api(catalog):
 
 @app.route('/api/v1/catalog/<item>.json')
 def catalog_item_api(item):
-    result = db_session.query(Item).filter_by(name=item).one_or_none()
-    CatalogItem = {
-        'name': result.name,
-        'description': result.description,
-        'catalog': result.catalog.name
-    }
-    return jsonify(CatalogItem=CatalogItem)
+    query = db_session.query(Item).filter_by(name=item).one_or_none()
+    result = [{
+        'name': query.name,
+        'description': query.description,
+        'catalog': query.catalog.name
+    }]
+    return jsonify(result)
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@
 {% block title %}
 <title>Catalog - Signin</title>
 <meta name="google-signin-scope" content="profile email">
- <meta name="google-signin-client_id" content="595409718148-20msa83bp9olaustssgugupts69n54aj.apps.googleusercontent.com">
+ <meta name="google-signin-client_id" content="595409718148-hgad6osjo607eal7ifpttdbp63peg7bf.apps.googleusercontent.com">
 {% endblock %}
 
 {% block styles %}
@@ -21,8 +21,8 @@
 					<div class="third-login gool-signup">
 						<div
               class="g-signin"
-              data-scope="openid"
-              data-clientid="595409718148-20msa83bp9olaustssgugupts69n54aj.apps.googleusercontent.com"
+              data-scope="profile email"
+              data-clientid="595409718148-hgad6osjo607eal7ifpttdbp63peg7bf.apps.googleusercontent.com"
               data-redirecturi="postmessage"
               data-accesstype="offline"
               data-cookiepolicy="single_host_origin"
@@ -36,13 +36,14 @@
 </main>
 <script>
   function onSignIn(googleUser) {
+    console.log(googleUser)
     if (googleUser['code']) {
       $.ajax({
         type: 'POST',
         url: '/gconnect?state={{STATE}}',
         proccessData: false,
         contentType: 'application/octet-stream; charset="utf-8"',
-        data: googleUser.code,
+        data: googleUser['code'],
         success: function(result) {
           if (result && result.code === 1) {
             window.location.href = '/';
