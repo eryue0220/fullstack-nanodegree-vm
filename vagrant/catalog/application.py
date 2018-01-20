@@ -214,6 +214,10 @@ def catalogItem(catalog, item):
 
 @app.route('/catalog/<catalog>/<item>/edit', methods=['GET', 'POST'])
 def editCatalogItem(catalog, item):
+    if login_session.get('username') is None:
+        response = make_response(json.dumps('Operation Failed'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     hasChange = False
 
@@ -257,6 +261,10 @@ def editCatalogItem(catalog, item):
 # delete operation api
 @app.route('/api/v1/catalog/<item>/delete')
 def deleteItem(item):
+    if login_session.get('username') is None:
+        response = make_response(json.dumps('Operation Failed'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     db_session.delete(selected_item)
     db_session.commit()
@@ -267,12 +275,20 @@ def deleteItem(item):
 # JSON APIs
 @app.route('/api/v1/catalogs.json')
 def catalogs_api():
+    if login_session.get('username') is None:
+        response = make_response(json.dumps('Authorization Denied'), 403)
+        response.headers['Content-Type'] = 'application/json'
+        return response
     result = db_session.query(Catalog).all()
     return jsonify([i.serialize for i in result])
 
 
 @app.route('/api/v1/<catalog>.json')
 def catalog_api(catalog):
+    if login_session.get('username') is None:
+        response = make_response(json.dumps('Authorization Denied'), 403)
+        response.headers['Content-Type'] = 'application/json'
+        return response
     query = db_session.query(Item).filter_by(catalog_name=catalog).all()
     result = []
     for i in query:
@@ -286,6 +302,10 @@ def catalog_api(catalog):
 
 @app.route('/api/v1/catalog/<item>.json')
 def catalog_item_api(item):
+    if login_session.get('username') is None:
+        response = make_response(json.dumps('Authorization Denied'), 403)
+        response.headers['Content-Type'] = 'application/json'
+        return response
     query = db_session.query(Item).filter_by(name=item).one_or_none()
     result = [{
         'name': query.name,
