@@ -36,7 +36,6 @@
 </main>
 <script>
   function onSignIn(googleUser) {
-    console.log(googleUser)
     if (googleUser['code']) {
       $.ajax({
         type: 'POST',

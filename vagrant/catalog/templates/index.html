@@ -66,26 +66,5 @@
 	</div>
 </main>
 
-<script src="{{url_for('static', filename='scripts/jquery.js')}}"></script>
 <script src="{{url_for('static', filename='scripts/index.js')}}"></script>
-<script>
-	function signOut() {
-		var $signOut = $('.js-user-signout');
-		if ($signOut.length) {
-			$signOut.on('click', function() {
-				$.ajax({
-					type: 'POST',
-					url: "/gdisconnect",
-					proccess: false,
-					success: function(result) {
-						console.log(result);
-						window.location.href = '/';
-					}
-				})
-			})
-		}
-	}
-
-	signOut();
-</script>
 {% endblock %}

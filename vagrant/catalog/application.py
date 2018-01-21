@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from functools import wraps
 from flask import request, Flask, render_template, redirect, jsonify, url_for
 from flask import make_response, session as login_session, flash
 from sqlalchemy import asc
@@ -23,6 +24,14 @@ app = Flask(__name__)
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'username' in login_session:
+            return f(*args, **kwargs)
+        return redirect('/signin')
+    return decorated
 
 @app.route('/')
 def index():
@@ -146,12 +155,10 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-
 @app.route('/add/catalog', methods=['GET', 'POST'])
+@login_required
 def addCatalog():
     if request.method == 'GET':
-        if login_session.get('username') is None:
-            return redirect(url_for('signin'))
         return render_template('add.html')
     if request.method == 'POST':
         form = request.form
@@ -171,10 +178,9 @@ def addCatalog():
 
 
 @app.route('/add/item', methods=['GET', 'POST'])
+@login_required
 def addItem():
     if request.method == 'GET':
-        if login_session.get('username') is None:
-            return redirect(url_for('signin'))
         catalogs = db_session.query(Catalog).all()
         return render_template('add_item.html', catalogs=catalogs)
     if request.method == 'POST':
@@ -183,7 +189,6 @@ def addItem():
         catalogName = form['catalog']
         description = form['description']
         catalogs = db_session.query(Catalog).all()
-
         query = db_session.query(Item).filter_by(name=name).one_or_none()
 
         if not query:
@@ -213,11 +218,8 @@ def catalogItem(catalog, item):
 
 
 @app.route('/catalog/<catalog>/<item>/edit', methods=['GET', 'POST'])
+@login_required
 def editCatalogItem(catalog, item):
-    if login_session.get('username') is None:
-        response = make_response(json.dumps('Operation Failed'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     hasChange = False
 
@@ -260,11 +262,8 @@ def editCatalogItem(catalog, item):
 
 # delete operation api
 @app.route('/api/v1/catalog/<item>/delete')
+@login_required
 def deleteItem(item):
-    if login_session.get('username') is None:
-        response = make_response(json.dumps('Operation Failed'), 401)
-        response.headers['Content-Type'] = 'application/json'
-        return response
     selected_item = db_session.query(Item).filter_by(name=item).one_or_none()
     db_session.delete(selected_item)
     db_session.commit()
@@ -273,22 +272,17 @@ def deleteItem(item):
 
 
 # JSON APIs
+
 @app.route('/api/v1/catalogs.json')
+@login_required
 def catalogs_api():
-    if login_session.get('username') is None:
-        response = make_response(json.dumps('Authorization Denied'), 403)
-        response.headers['Content-Type'] = 'application/json'
-        return response
     result = db_session.query(Catalog).all()
     return jsonify([i.serialize for i in result])
 
 
 @app.route('/api/v1/<catalog>.json')
+@login_required
 def catalog_api(catalog):
-    if login_session.get('username') is None:
-        response = make_response(json.dumps('Authorization Denied'), 403)
-        response.headers['Content-Type'] = 'application/json'
-        return response
     query = db_session.query(Item).filter_by(catalog_name=catalog).all()
     result = []
     for i in query:
@@ -301,11 +295,8 @@ def catalog_api(catalog):
 
 
 @app.route('/api/v1/catalog/<item>.json')
+@login_required
 def catalog_item_api(item):
-    if login_session.get('username') is None:
-        response = make_response(json.dumps('Authorization Denied'), 403)
-        response.headers['Content-Type'] = 'application/json'
-        return response
     query = db_session.query(Item).filter_by(name=item).one_or_none()
     result = [{
         'name': query.name,
